@@ -14,6 +14,23 @@ const char RIGHTARROW = 77;
 const char DOWNARROW = 80;
 const char SPECIAL = (char)224;
 
+// Canvas type definition (2D array of characters)
+typedef char ListItemType[MAXROWS][MAXCOLS];
+
+// Node structure for linked lists
+struct Node
+{
+    ListItemType item;
+    Node* next;
+};
+
+// List structure to manage linked lists
+struct List
+{
+    Node* head = nullptr;
+    int count = 0;
+};
+
 struct DrawPoint;
 
 /*
@@ -21,11 +38,11 @@ struct DrawPoint;
 */
 struct Point
 {
-	int row, col;
+    int row, col;
 
-	Point() { row = 0; col = 0; }
-	Point(int r, int c) { row = r; col = c; }
-	Point(DrawPoint p);
+    Point() { row = 0; col = 0; }
+    Point(int r, int c) { row = r; col = c; }
+    Point(DrawPoint p);
 };
 
 /*
@@ -33,13 +50,147 @@ struct Point
 */
 struct DrawPoint
 {
-	double row, col;
+    double row, col;
 
-	DrawPoint() { row = 0; col = 0; }
-	DrawPoint(int r, int c) { row = r; col = c; }
-	DrawPoint(Point p) { row = p.row;  col = p.col; }
+    DrawPoint() { row = 0; col = 0; }
+    DrawPoint(int r, int c) { row = r; col = c; }
+    DrawPoint(Point p) { row = p.row;  col = p.col; }
 };
 
+
+//--------------------New Functions---------------------------------------------------------------------
+
+/*
+* Creates and returns a new node, which contains a single blank (initialized) canvas
+*/
+Node* newCanvas();
+
+/*
+* Creates and returns a new node, which contains a single canvas, where the canvas
+* contains a copy of the one which is inside oldNode
+*/
+Node* newCanvas(Node* oldNode);
+
+/*
+* Adds a node to the front of a linked list
+* listToUpdate is a structure containing the linked list to which the node is to be added
+* nodeToAdd is the node which should be inserted at the front of the linked list
+*/
+void addNode(List& listToUpdate, Node* nodeToAdd);
+
+/*
+* Removes a node from the front of a linked list
+* listToUpdate is a structure containing the linked list from which the node is to be removed
+* Returns the node which was removed from the list
+* Returns NULL if the list is empty
+*/
+Node* removeNode(List& listToUpdate);
+
+/*
+* Deletes all of the nodes in a linked list
+* listToUpdate is a structure containing the linked list to be deleted
+*/
+void deleteList(List& listToDelete);
+
+/*
+* Adds a new undo state to the front of undoList, containing a
+* a copy of the current canvas
+* undoList the list to which the new undo state is to be added
+* redoList is the list containing the redo states
+* current is a node reprsenting the current drawing canvas
+*/
+void addUndoState(List& undoList, List& redoList, Node* current);
+
+/*
+* Undo or Redo operation
+* Adds current node to the front of the redoList, then removes a node
+* from the front of the undoList and sets this as the current node
+*/
+void restore(List& undoList, List& redoList, Node*& current);
+
+/*
+* Plays the current animation in the drawing window repeatedly until ESC is held
+* The current canvas is not changed
+* clips is a structure containing the linked list holding the animation clips
+* in reverse order (the item at the end of the linked list is assumed to be
+* the first clip in the animation)
+* The animation can only be played if there are at least 2 clips in the animation
+* This function uses playRecursive to actually play the clips
+*/
+void play(List& clips);
+
+/*
+* Recursive function which plays all of the clips found in the linked list
+* pointed to by head.  Count represents the number of clips found in the
+* list currently pointed to by head, and is used to display the clip number
+* at the bottom of the screen.
+*/
+void playRecursive(Node* head, int count);
+
+/*
+* Erases all clips found in the clips list, and then loads a new
+* set of clips into the list, from several saved files.
+* Filename is assumed to be in the form: "SavedFiles\example"
+* The function will form filenames like:
+*   SavedFiles\example-1.txt, SavedFiles\example-2.txt, SavedFiles\example-3.txt, etc.
+* Each file will be opened and its contents loaded into a new
+* node in the clips list. The item at the front of the list will
+* be the last file (the one with the highest number).
+*
+* If the first file can be opened for reading, this function assumes the
+* rest can be also, and loads them into the clips list, then returns TRUE.
+* If the first file cannot be opened for reading, returns FALSE.
+* The current canvas is not affected by this function.
+*/
+bool loadClips(List& clips, char filename[]);
+
+/*
+* Writes all of the clips from the clips list into multiple files.
+* Filename is assumed to be in the form: "SavedFiles\example"
+* The function will store each clip from the list into a separate file such as:
+*   SavedFiles\example-1.txt, SavedFiles\example-2.txt, SavedFiles\example-3.txt, etc.
+* The clip at the end of the list will be stored in the first file.
+*
+* If the files have been written successfully, this function returns TRUE.
+* If the any file fails to be written, this function returns FALSE.
+*/
+bool saveClips(List& clips, char filename[]);
+
+
+//--------------------Modified Functions---------------------------------------------------------------
+
+/*
+* Opens the specified filename for reading; assumed to be a TXT file.
+* Filename is assumed to be in the form: "SavedFiles\example.txt"
+* If the file can be opened for reading, this function loads the
+* file's contents into current canvas, and then returns TRUE.
+* If the file cannot be opened for reading, returns FALSE.
+* If the file cannot be opened, canvas is left unchanged.
+*/
+bool loadCanvas(char canvas[][MAXCOLS], char filename[]);
+
+/*
+* Opens the specified filename for writing; assumed to be a TXT file.
+* If the file can be opened for writing, this function writes the
+* current canvas contents into the file, and then returns TRUE.
+* If the file cannot be opened for writing, returns FALSE.
+*/
+bool saveCanvas(char canvas[][MAXCOLS], char filename[]);
+
+/*
+* Secondary menu used for choosing the new drawing functions.
+* Menu repeats until the user enters 'M' to return to the main menu.
+* current is a Node representing the main drawing canvas
+* undoList is a List of nodes, holding all of the undo states
+* redoList is a List of nodes, holding all of the redo states
+* clips is a List of nodes, representing the current animation clip
+* animate - true: animate / false: no animation
+*   animate will be updated to reflect the menu option chosen by the user
+*/
+void menuTwo(Node*& current, List& undoList, List& redoList, List& clips, bool& animate);
+
+
+//--------------------Old Functions---------------------------------------------------------------------
 
 /*
 * Allows user to choose a location on the screen moving the cursor around with arrow keys.
@@ -50,18 +201,8 @@ struct DrawPoint
 char getPoint(Point& pt);
 
 /*
-* Secondary menu used for choosing the new drawing functions.
-* Menu repeats until the user enters 'M' to return to the main menu.
-* canvas is the main drawing canvas
-* backupCanvas is the backup canvas used to support the undo operation
-* animate - true: animate / false: no animation
-*   animate will be updated to reflect the menu option chosen by the user
-*/
-void menuTwo(char canvas[][MAXCOLS], char backupCanvas[][MAXCOLS], bool& animate);
-
-/*
 * Recursive function to fill a section of the canvas. Replaces all of adjacent oldCh characters in
-* the canvas section with newCh. 
+* the canvas section with newCh.
 * row and col is the row and column of the starting location where filling should begin
 * oldCh is the character in the section to be replaced
 * newCh is the character to replace with
@@ -92,7 +233,7 @@ void drawLine(char canvas[][MAXCOLS], DrawPoint start, DrawPoint end, bool anima
 * height is the height of the box (width is automatically proportionally chosen based on canvas size)
 * animate - true: animate the drawing / false: no animation
 */
-void drawBox(char canvas[][MAXCOLS], Point center, int height, bool  animate);
+void drawBox(char canvas[][MAXCOLS], Point center, int height, bool animate);
 
 /*
 * Recursive function to draw a series of nested boxes into the canvas, around a central point.
@@ -114,8 +255,6 @@ void drawBoxesRecursive(char canvas[][MAXCOLS], Point center, int height, bool a
 */
 void treeRecursive(char canvas[][MAXCOLS], DrawPoint start, int height, int startAngle, int branchAngle, bool animate);
 
-
-
 /*
 * Finds the end point of a line, given the line's starting point, length, and angle
 * angle: 0 = east, 90 = south, 180 = west, 270 = north
@@ -135,29 +274,6 @@ double inline degree2radian(int a) { return (a * 0.017453292519); }
 * ch is the character to draw; animate - true: animate the drawing / false: no animation
 */
 void drawLineFillRow(char canvas[][MAXCOLS], int col, int startRow, int endRow, char ch, bool animate);
-
-
-
-
-
-//--------------------Old Functions---------------------------------------------------------------------
-
-/*
-* Gets a filename from the user. If file can be opened for reading,
-* this function loads the file's contents into canvas.
-* File is a TXT file located in the SavedFiles folder.
-* If file cannot be opened, error message is displayed and
-* canvas is left unchanged.
-*/
-void loadCanvas(char canvas[][MAXCOLS]);
-
-/*
-* Gets a filename from the user. If file can be opened for writing,
-* this function writes the canvas contents into the file.
-* File is a TXT file located in the SavedFiles folder.
-* If file cannot be opened, error message is displayed.
-*/
-void saveCanvas(char canvas[][MAXCOLS]);
 
 /*
 * Initializes canvas to contain all spaces.

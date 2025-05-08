@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="LinkedList.cpp" />
     <ClCompile Include="NewFunctions.cpp" />
     <ClCompile Include="TextArt.cpp" />
   </ItemGroup>

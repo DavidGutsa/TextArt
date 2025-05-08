@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/LinkedList - Copy.cpp
+/NewFunctions - Copy (2).cpp
+/TextArt - Copy (2).cpp
+/Definitions - Copy.h
